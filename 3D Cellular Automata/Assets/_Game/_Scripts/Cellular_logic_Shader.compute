@@ -1,0 +1,96 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+RWBuffer<int> currentCellBuffer; // 0 is false 1 is true
+RWBuffer<int> nextCellBuffer;    // 0 is false 1 is true
+int3 boardDimesions;
+int ruleToUse;
+
+bool Rules(int rule, int3 id, int cellMap, int aliveNeighbourCount)
+{
+    switch (rule)
+    {
+        case 1:
+            if(aliveNeighbourCount <= 7 && gameBoard.currentCellArray[id].isAlive) {
+                // Debug.Log("Died from underpopulation");
+                return false;
+            }
+            else if(aliveNeighbourCount >= 17 && gameBoard.currentCellArray[id].isAlive) {
+                // Debug.Log("Died from overpopulation");
+                return false;
+            }
+            else if(aliveNeighbourCount == 8 && !gameBoard.currentCellArray[id].isAlive) {
+                // Debug.Log("Born");
+                return true;
+            } 
+            else if(gameBoard.currentCellArray[id].isAlive) {
+                // Debug.Log("Survived");
+                return true;
+            }
+            return false;
+
+        default:
+            return false;
+    }
+}
+
+[numthreads(8,8,8)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+    if(id.x <= boardDimesions.x || id.y <= boardDimesions.y || id.z <= boardDimesions.z)
+        return;
+
+    int index = (id.z * boardDimesions.x * boardDimesions.y) + (id.y * boardDimesions.x) + id.x
+
+    // Find all surrounding indexes
+    int3[] surroundingIndexes = 
+    {
+        // Bottom layer
+        int3(id.x+0, id.y-1, id.z+1), // 1 forward
+        int3(id.x+1, id.y-1, id.z+1), // 2 forward right
+        int3(id.x+1, id.y-1, id.z+0), // 3 right
+        int3(id.x+1, id.y-1, id.z-1), // 4 back right
+        int3(id.x-0, id.y-1, id.z-1), // 5 back
+        int3(id.x-1, id.y-1, id.z-1), // 6 back left
+        int3(id.x-1, id.y-1, id.z-0), // 7 left
+        int3(id.x-1, id.y-1, id.z+1), // 8 forward left
+        int3(id.x+0, id.y-1, id.z+0), // 9 underneath
+        
+        // Middle layer
+        int3(id.x+0, id.y+0, id.z+1), // 10 forward
+        int3(id.x+1, id.y+0, id.z+1), // 11 forward right
+        int3(id.x+1, id.y+0, id.z+0), // 12 right
+        int3(id.x+1, id.y+0, id.z-1), // 13 back right
+        int3(id.x-0, id.y+0, id.z-1), // 14 back
+        int3(id.x-1, id.y+0, id.z-1), // 15 back left
+        int3(id.x-1, id.y+0, id.z-0), // 16 left
+        int3(id.x-1, id.y+0, id.z+1), // 17 forward left
+
+        // Top layer
+        int3(id.x+0, id.y+1, id.z+1), // 18 forward
+        int3(id.x+1, id.y+1, id.z+1), // 19 forward right
+        int3(id.x+1, id.y+1, id.z+0), // 20 right
+        int3(id.x+1, id.y+1, id.z-1), // 21 back right
+        int3(id.x-0, id.y+1, id.z-1), // 22 back
+        int3(id.x-1, id.y+1, id.z-1), // 23 back left
+        int3(id.x-1, id.y+1, id.z-0), // 24 left
+        int3(id.x-1, id.y+1, id.z+1), // 25 forward left
+        int3(id.x+0, id.y+1, id.z+0), // 26 underneath
+    };
+
+    int cellMap = 0, aliveNeighbourCount = 0;
+    for(int k = 0; k < surroundingIndexes.Length; k++)
+    {
+        if(surroundingIndexes[k].x <= boardDimesions.x || surroundingIndexes[k].y <= boardDimesions.y 
+                                                       || surroundingIndexes[k].z <= boardDimesions.z)
+        {
+            if(currentCellBuffer[index] == 1)
+            {
+                aliveNeighbourCount++;
+                cellMap += (1 << k);
+            }
+        }
+    }
+
+    nextCellArray[index] = Rules(ruleToUse, id, cellMap, aliveNeighbourCount) ? 1 : 0;
+}
