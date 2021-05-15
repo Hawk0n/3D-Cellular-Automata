@@ -3,27 +3,27 @@
 
 RWBuffer<int> currentCellBuffer; // 0 is false 1 is true
 RWBuffer<int> nextCellBuffer;    // 0 is false 1 is true
-int3 boardDimesions;
+float4 boardDimensions;
 int ruleToUse;
 
-bool Rules(int rule, int3 id, int cellMap, int aliveNeighbourCount)
+bool Rules(int rule, int index, int cellMap, int aliveNeighbourCount)
 {
     switch (rule)
     {
         case 1:
-            if(aliveNeighbourCount <= 7 && gameBoard.currentCellArray[id].isAlive) {
+            if(aliveNeighbourCount <= 7 && currentCellBuffer[index] == 1) {
                 // Debug.Log("Died from underpopulation");
                 return false;
             }
-            else if(aliveNeighbourCount >= 17 && gameBoard.currentCellArray[id].isAlive) {
+            else if(aliveNeighbourCount >= 15 && currentCellBuffer[index] == 1) {
                 // Debug.Log("Died from overpopulation");
                 return false;
             }
-            else if(aliveNeighbourCount == 8 && !gameBoard.currentCellArray[id].isAlive) {
+            else if(aliveNeighbourCount == 8 && currentCellBuffer[index] == 0) {
                 // Debug.Log("Born");
                 return true;
             } 
-            else if(gameBoard.currentCellArray[id].isAlive) {
+            else if(currentCellBuffer[index] == 1) {
                 // Debug.Log("Survived");
                 return true;
             }
@@ -37,13 +37,14 @@ bool Rules(int rule, int3 id, int cellMap, int aliveNeighbourCount)
 [numthreads(8,8,8)]
 void CSMain (uint3 id : SV_DispatchThreadID)
 {
-    if(id.x <= boardDimesions.x || id.y <= boardDimesions.y || id.z <= boardDimesions.z)
+    if(id.x >= (uint)boardDimensions.x || id.y >= (uint)boardDimensions.y || id.z >= (uint)boardDimensions.z)
         return;
 
-    int index = (id.z * boardDimesions.x * boardDimesions.y) + (id.y * boardDimesions.x) + id.x
+    int index = (id.z * boardDimensions.x * boardDimensions.y) + (id.y * boardDimensions.x) + id.x;
+    int currentCell = currentCellBuffer[index];
 
     // Find all surrounding indexes
-    int3[] surroundingIndexes = 
+    int3 surroundingIndexes[26] = 
     {
         // Bottom layer
         int3(id.x+0, id.y-1, id.z+1), // 1 forward
@@ -79,12 +80,13 @@ void CSMain (uint3 id : SV_DispatchThreadID)
     };
 
     int cellMap = 0, aliveNeighbourCount = 0;
-    for(int k = 0; k < surroundingIndexes.Length; k++)
+    for(int k = 0; k < 26; k++)
     {
-        if(surroundingIndexes[k].x <= boardDimesions.x || surroundingIndexes[k].y <= boardDimesions.y 
-                                                       || surroundingIndexes[k].z <= boardDimesions.z)
+        if(surroundingIndexes[k].x <= boardDimensions.x && surroundingIndexes[k].y <= boardDimensions.y 
+                                                        && surroundingIndexes[k].z <= boardDimensions.z)
         {
-            if(currentCellBuffer[index] == 1)
+            int surroundingIndex = (surroundingIndexes[k].z * boardDimensions.x * boardDimensions.y) + (surroundingIndexes[k].y * boardDimensions.x) + surroundingIndexes[k].x;
+            if(currentCellBuffer[surroundingIndex] == 1)
             {
                 aliveNeighbourCount++;
                 cellMap += (1 << k);
@@ -92,5 +94,6 @@ void CSMain (uint3 id : SV_DispatchThreadID)
         }
     }
 
-    nextCellArray[index] = Rules(ruleToUse, id, cellMap, aliveNeighbourCount) ? 1 : 0;
+    currentCell = Rules(ruleToUse, index, cellMap, aliveNeighbourCount) ? 1 : 0;
+    nextCellBuffer[index] = currentCell;
 }

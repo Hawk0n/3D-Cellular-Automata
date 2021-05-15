@@ -373,13 +373,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 811209795}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -2.7975492, y: 5.8266907, z: 1.0272055}
+  m_LocalRotation: {x: 0.19957313, y: 0.18512167, z: -0.03842586, w: 0.9614697}
+  m_LocalPosition: {x: -2.9, y: 23.9, z: -19.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 2
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 23.453, y: 21.797, z: 0}
 --- !u!1 &1186387928
 GameObject:
   m_ObjectHideFlags: 0
@@ -410,6 +410,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f33f4d264b5e14b28ba7b8357bdd901b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  logicShader: {fileID: 7200000, guid: 01b11f3e4f64145f0bf733f05b00dcdb, type: 3}
   boardDimensions:
     x: 20
     y: 20
@@ -417,8 +418,8 @@ MonoBehaviour:
   rule: 1
   cellSize: 1
   cellCount: 0
-  timeBetweenGenerations: 0.5
-  deadToAliveRatio: 0.5
+  timeBetweenGenerations: 0
+  deadToAliveRatio: 0.67
   cube: {fileID: 5616948950303469309, guid: a11b1a2226d9941fb9411e28efe6082c, type: 3}
 --- !u!4 &1186387930
 Transform:
